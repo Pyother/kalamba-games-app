@@ -1,6 +1,7 @@
 // Articles
 export type { ArticleType } from "./article/ArticleType";
 export type { ArticleResponse, ArticlesResponse } from "./article/ArticleResponseType";
+export type { ArticleFilters } from "./article/ArticleFilters";
 
 // Profiles
 export type { ProfileType } from "./profile/ProfileType";
