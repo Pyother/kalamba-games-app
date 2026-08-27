@@ -1,19 +1,30 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useHistory, useParams } from "react-router-dom";
 
 import { getArticle } from "api/articles/getArticle";
+import { favoriteArticle } from "api/favorites/favoriteArticle";
+import { unfavoriteArticle } from "api/favorites/unfavoriteArticle";
+import { followProfile } from "api/profiles/followProfile";
+import { unfollowProfile } from "api/profiles/unfollowProfile";
 import ArticleMeta from "components/articles/ArticleMeta";
+import { useAuth } from "context/AuthContext";
 import type { ArticleType } from "types";
 
 interface ArticleRouteParams {
   slug: string;
 }
 
+type PendingAction = "favorite" | "follow" | null;
+
 export default function Article(): JSX.Element {
+  const history = useHistory();
   const { slug } = useParams<ArticleRouteParams>();
+  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  const [actionError, setActionError] = useState<string | null>(null);
   const [article, setArticle] = useState<ArticleType | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [pendingAction, setPendingAction] = useState<PendingAction>(null);
 
   useEffect(() => {
     let isActive = true;
@@ -44,6 +55,55 @@ export default function Article(): JSX.Element {
     };
   }, [slug]);
 
+  const requireAuthentication = (): boolean => {
+    if (isAuthenticated) {
+      return true;
+    }
+
+    history.push("/login", { from: `/${slug}` });
+    return false;
+  };
+
+  const handleFavoriteToggle = async (): Promise<void> => {
+    if (!article || !requireAuthentication()) {
+      return;
+    }
+
+    setActionError(null);
+    setPendingAction("favorite");
+
+    try {
+      const response = article.favorited ? await unfavoriteArticle(article.slug) : await favoriteArticle(article.slug);
+
+      setArticle(response.article);
+    } catch {
+      setActionError("Unable to update this favorite. Please try again.");
+    } finally {
+      setPendingAction(null);
+    }
+  };
+
+  const handleFollowToggle = async (): Promise<void> => {
+    if (!article || !requireAuthentication()) {
+      return;
+    }
+
+    setActionError(null);
+    setPendingAction("follow");
+
+    try {
+      const response = article.author.following
+        ? await unfollowProfile(article.author.username)
+        : await followProfile(article.author.username);
+
+      setArticle(currentArticle => (currentArticle ? { ...currentArticle, author: response.profile } : currentArticle));
+    } catch {
+      setActionError("Unable to update the followed author. Please try again.");
+    } finally {
+      setPendingAction(null);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="article-page">
@@ -67,7 +127,14 @@ export default function Article(): JSX.Element {
       <div className="banner">
         <div className="container">
           <h1>{article.title}</h1>
-          <ArticleMeta article={article} />
+          <ArticleMeta
+            article={article}
+            isDisabled={isAuthLoading || pendingAction !== null}
+            isFavoritePending={pendingAction === "favorite"}
+            isFollowPending={pendingAction === "follow"}
+            onFavoriteToggle={handleFavoriteToggle}
+            onFollowToggle={handleFollowToggle}
+          />
         </div>
       </div>
 
@@ -90,8 +157,21 @@ export default function Article(): JSX.Element {
 
         <hr />
 
+        {actionError && (
+          <div className="error-messages text-xs-center" role="alert">
+            {actionError}
+          </div>
+        )}
+
         <div className="article-actions">
-          <ArticleMeta article={article} />
+          <ArticleMeta
+            article={article}
+            isDisabled={isAuthLoading || pendingAction !== null}
+            isFavoritePending={pendingAction === "favorite"}
+            isFollowPending={pendingAction === "follow"}
+            onFavoriteToggle={handleFavoriteToggle}
+            onFollowToggle={handleFollowToggle}
+          />
         </div>
       </div>
     </div>

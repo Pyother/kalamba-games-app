@@ -1,16 +1,22 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { Redirect, useHistory } from "react-router-dom";
+import { Redirect, useHistory, useLocation } from "react-router-dom";
 
 import { useAuth } from "context/AuthContext";
 
+interface LoginLocationState {
+  from?: string;
+}
+
 export default function Login(): JSX.Element {
   const history = useHistory();
+  const location = useLocation<LoginLocationState>();
   const { isAuthenticated, isLoading, login } = useAuth();
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [password, setPassword] = useState("");
+  const redirectPath = location.state?.from ?? "/";
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
@@ -19,7 +25,7 @@ export default function Login(): JSX.Element {
 
     try {
       await login({ email, password });
-      history.replace("/");
+      history.replace(redirectPath);
     } catch {
       setError("Invalid email or password.");
       setIsSubmitting(false);
@@ -31,7 +37,7 @@ export default function Login(): JSX.Element {
   }
 
   if (isAuthenticated) {
-    return <Redirect to="/" />;
+    return <Redirect to={redirectPath} />;
   }
 
   return (
