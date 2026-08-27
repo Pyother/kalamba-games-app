@@ -8,5 +8,6 @@ export type { ProfileType } from "./profile/ProfileType";
 export type { ProfileResponse } from "./profile/ProfileResponseType";
 
 // Users
+export type { LoginUserType } from "./user/LoginUserType";
 export type { UserType } from "./user/UserType";
 export type { UserResponseType } from "./user/UserResponseType";
