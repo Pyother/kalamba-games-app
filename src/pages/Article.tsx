@@ -1,119 +1,99 @@
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+
+import { getArticle } from "api/articles/getArticle";
+import ArticleMeta from "components/articles/ArticleMeta";
+import type { ArticleType } from "types";
+
+interface ArticleRouteParams {
+  slug: string;
+}
+
 export default function Article(): JSX.Element {
-  return (
-    <>
+  const { slug } = useParams<ArticleRouteParams>();
+  const [article, setArticle] = useState<ArticleType | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let isActive = true;
+
+    setArticle(null);
+    setError(null);
+    setIsLoading(true);
+
+    getArticle(slug)
+      .then(response => {
+        if (isActive) {
+          setArticle(response.article);
+        }
+      })
+      .catch(() => {
+        if (isActive) {
+          setError("Unable to load this article. Please try again later.");
+        }
+      })
+      .finally(() => {
+        if (isActive) {
+          setIsLoading(false);
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [slug]);
+
+  if (isLoading) {
+    return (
       <div className="article-page">
-        <div className="banner">
-          <div className="container">
-            <h1>How to build webapps that scale</h1>
+        <div className="container page">Loading article...</div>
+      </div>
+    );
+  }
 
-            <div className="article-meta">
-              <a href="/#/profile/ericsimmons">
-                <img src="http://i.imgur.com/Qr71crq.jpg" />
-              </a>
-              <div className="info">
-                <a href="/#/profile/ericsimmons" className="author">
-                  Eric Simons
-                </a>
-                <span className="date">January 20th</span>
-              </div>
-              <button className="btn btn-sm btn-outline-secondary">
-                <i className="ion-plus-round" />
-                &nbsp; Follow Eric Simons <span className="counter">(10)</span>
-              </button>
-              &nbsp;&nbsp;
-              <button className="btn btn-sm btn-outline-primary">
-                <i className="ion-heart" />
-                &nbsp; Favorite Post <span className="counter">(29)</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div className="container page">
-          <div className="row article-content">
-            <div className="col-md-12">
-              <p>Web development technologies have evolved at an incredible clip over the past few years.</p>
-              <h2 id="introducing-ionic">Introducing RealWorld.</h2>
-              <p>It&lsquo;s a great solution for learning how other frameworks work.</p>
-            </div>
-          </div>
-
-          <hr />
-
-          <div className="article-actions">
-            <div className="article-meta">
-              <a href="/#/profile/ericsimmons">
-                <img src="http://i.imgur.com/Qr71crq.jpg" />
-              </a>
-              <div className="info">
-                <a href="/#/profile/ericsimmons" className="author">
-                  Eric Simons
-                </a>
-                <span className="date">January 20th</span>
-              </div>
-              <button className="btn btn-sm btn-outline-secondary">
-                <i className="ion-plus-round" />
-                &nbsp; Follow Eric Simons
-              </button>
-              &nbsp;
-              <button className="btn btn-sm btn-outline-primary">
-                <i className="ion-heart" />
-                &nbsp; Favorite Post <span className="counter">(29)</span>
-              </button>
-            </div>
-          </div>
-
-          <div className="row">
-            <div className="col-xs-12 col-md-8 offset-md-2">
-              <form className="card comment-form">
-                <div className="card-block">
-                  <textarea className="form-control" placeholder="Write a comment..." rows={3} />
-                </div>
-                <div className="card-footer">
-                  <img src="http://i.imgur.com/Qr71crq.jpg" className="comment-author-img" />
-                  <button className="btn btn-sm btn-primary">Post Comment</button>
-                </div>
-              </form>
-
-              <div className="card">
-                <div className="card-block">
-                  <p className="card-text">With supporting text below as a natural lead-in to additional content.</p>
-                </div>
-                <div className="card-footer">
-                  <a href="/#/profile/jacobschmidt" className="comment-author">
-                    <img src="http://i.imgur.com/Qr71crq.jpg" className="comment-author-img" />
-                  </a>
-                  &nbsp;
-                  <a href="/#/profile/jacobschmidt" className="comment-author">
-                    Jacob Schmidt
-                  </a>
-                  <span className="date-posted">Dec 29th</span>
-                </div>
-              </div>
-
-              <div className="card">
-                <div className="card-block">
-                  <p className="card-text">With supporting text below as a natural lead-in to additional content.</p>
-                </div>
-                <div className="card-footer">
-                  <a href="/#/profile/jacobschmidt" className="comment-author">
-                    <img src="http://i.imgur.com/Qr71crq.jpg" className="comment-author-img" />
-                  </a>
-                  &nbsp;
-                  <a href="/#/profile/jacobschmidt" className="comment-author">
-                    Jacob Schmidt
-                  </a>
-                  <span className="date-posted">Dec 29th</span>
-                  <span className="mod-options">
-                    <i className="ion-edit" />
-                    <i className="ion-trash-a" />
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
+  if (error || !article) {
+    return (
+      <div className="article-page">
+        <div className="container page" role="alert">
+          {error ?? "Article not found."}
         </div>
       </div>
-    </>
+    );
+  }
+
+  return (
+    <div className="article-page">
+      <div className="banner">
+        <div className="container">
+          <h1>{article.title}</h1>
+          <ArticleMeta article={article} />
+        </div>
+      </div>
+
+      <div className="container page">
+        <div className="row article-content">
+          <div className="col-md-12">
+            <p style={{ whiteSpace: "pre-wrap" }}>{article.body}</p>
+
+            {article.tagList.length > 0 && (
+              <ul className="tag-list">
+                {article.tagList.map(tag => (
+                  <li className="tag-default tag-pill tag-outline" key={tag}>
+                    {tag}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+
+        <hr />
+
+        <div className="article-actions">
+          <ArticleMeta article={article} />
+        </div>
+      </div>
+    </div>
   );
 }

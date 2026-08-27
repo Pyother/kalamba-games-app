@@ -1,6 +1,6 @@
-import type { SyntheticEvent } from "react";
 import { Link } from "react-router-dom";
 
+import Avatar from "components/common/Avatar";
 import { formatDate } from "lib/formatDate";
 import type { ArticleType } from "types";
 
@@ -8,25 +8,14 @@ interface ArticlePreviewProps {
   article: ArticleType;
 }
 
-const defaultAvatar = `${process.env.PUBLIC_URL}/default-avatar.svg`;
-
 export default function ArticlePreview({ article }: ArticlePreviewProps): JSX.Element {
   const profilePath = `/profile/${encodeURIComponent(article.author.username)}`;
-
-  const handleImageError = (event: SyntheticEvent<HTMLImageElement>): void => {
-    event.currentTarget.onerror = null;
-    event.currentTarget.src = defaultAvatar;
-  };
 
   return (
     <div className="article-preview">
       <div className="article-meta">
         <Link to={profilePath}>
-          <img
-            alt={`${article.author.username}'s avatar`}
-            onError={handleImageError}
-            src={article.author.image || defaultAvatar}
-          />
+          <Avatar image={article.author.image} username={article.author.username} />
         </Link>
         <div className="info">
           <Link className="author" to={profilePath}>
