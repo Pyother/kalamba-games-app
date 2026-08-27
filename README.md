@@ -6,6 +6,21 @@ Your task is to implement a simple CRUD application. The application is based on
 
 You will find OpenAPI Specification (Swagger 2.0) for the API to use with this project in `docs/schema/swagger.json`. We recommend [Swagger Editor](https://editor.swagger.io/) to explore it in human readable format.
 
+## Implemented solution
+
+The application implements the requested global articles list, article details, author profile, login and logout
+flows. Article favorites and author follows are connected to the API, visually reflect the authenticated user's state
+and redirect anonymous users to the login page before a protected action. Missing author images use a local
+placeholder. Loading, empty and error states are handled for API-backed pages.
+
+Registration, article editing, comments, the personal feed and dynamic tags are intentionally omitted because they
+are outside the requested scope. The API profile schema does not expose a followers count, so the UI can display the
+follow state but cannot show a reliable count without inventing data. Article Markdown is rendered as plain text
+because Markdown conversion is optional.
+
+The solution includes focused tests for the articles list, article details and actions, authentication, and author
+profile. Run them with `npm test -- --watchAll=false --runInBand`.
+
 ## Business requirements
 
 The application, as the entry point, should display the articles list page. Since the assignment is time constrained, it would be impossible to fully implement the project. Please implement at most the pages mentioned in the next section. If you think we expect too much, please let us know what you have omitted and try to explain your reasoning.

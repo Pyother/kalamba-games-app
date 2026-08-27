@@ -15,5 +15,5 @@ export async function request<T>(path: string, options: RequestInit = {}): Promi
   }
 
   const text = await response.text();
-  return (text ? JSON.parse(text) : undefined) as T;
+  return JSON.parse(text || "null");
 }
