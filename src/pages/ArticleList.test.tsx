@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
 import { getArticles } from "api/articles/getArticles";
+import { AuthProvider } from "context/AuthContext";
 import type { ArticleType } from "types";
 
 import ArticleList from "./ArticleList";
@@ -35,7 +36,9 @@ test("renders articles loaded from the API", async () => {
 
   render(
     <MemoryRouter>
-      <ArticleList />
+      <AuthProvider>
+        <ArticleList />
+      </AuthProvider>
     </MemoryRouter>
   );
 
